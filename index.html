@@ -59,7 +59,6 @@
     <button id="warningBtn" onclick="addEntry('warning')">경고</button>
     <button id="banBtn" onclick="addEntry('ban')">정지</button>
     <button id="kickBtn" onclick="addEntry('kick')">퇴장</button>
-    <button onclick="saveToFile()">데이터 저장</button>
 
     <table>
         <thead>
@@ -74,29 +73,39 @@
         <tbody id="tableBody"></tbody>
     </table>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
     <script>
+        // Firebase 설정 (프로젝트 생성 후 제공된 값으로 교체)
+		  const firebaseConfig = {
+			apiKey: "AIzaSyB0RfhCYOTARxVqH3ejYQH5dHJI5KEQZpc",
+			authDomain: "worldinfowarn.firebaseapp.com",
+			databaseURL: "https://worldinfowarn-default-rtdb.firebaseio.com",
+			projectId: "worldinfowarn",
+			storageBucket: "worldinfowarn.firebasestorage.app",
+			messagingSenderId: "334505201044",
+			appId: "1:334505201044:web:a01144c9cbc0f9ef271381",
+			measurementId: "G-78ZVZD2TG2"
+		  };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         let currentUser = null;
         let loggedInUsers = [];
         let userData = {};
         let userPasswords = {};
 
-        // 데이터 로드
+        // 데이터 로드 (실시간 리스닝)
         function loadData() {
-            fetch('src/data.json')
-                .then(response => response.json())
-                .then(data => {
-                    userData = data.userData || {};
-                    loggedInUsers = data.loggedInUsers || [];
-                    userPasswords = data.userPasswords || {};
-                    renderTable();
-                })
-                .catch(error => {
-                    console.log('데이터 파일이 없거나 오류 발생:', error);
-                    userData = {};
-                    loggedInUsers = [];
-                    userPasswords = {};
-                    renderTable();
-                });
+            db.ref('/').on('value', snapshot => {
+                const data = snapshot.val() || {};
+                userData = data.userData || {};
+                loggedInUsers = data.loggedInUsers || [];
+                userPasswords = data.userPasswords || {};
+                renderTable();
+                if (currentUser) updateOnlineStatus();
+            });
         }
 
         function renderTable() {
@@ -165,23 +174,30 @@
                 alert('작성자 이름과 비밀번호를 입력해주세요!');
                 return;
             }
-            if (userPasswords[username]) {
-                if (userPasswords[username] !== password) {
-                    alert('비밀번호가 틀렸습니다!');
-                    return;
+            db.ref('userPasswords/' + username).once('value', snapshot => {
+                const storedPassword = snapshot.val();
+                if (storedPassword) {
+                    if (storedPassword !== password) {
+                        alert('비밀번호가 틀렸습니다!');
+                        return;
+                    }
+                } else {
+                    db.ref('userPasswords/' + username).set(password);
                 }
-            } else {
-                userPasswords[username] = password;
-            }
-            currentUser = username;
-            if (!loggedInUsers.includes(username)) {
-                loggedInUsers.push(username);
-            }
-            document.getElementById('username').style.display = 'none';
-            document.getElementById('password').style.display = 'none';
-            document.getElementById('loginBtn').style.display = 'none';
-            document.getElementById('logoutBtn').style.display = 'inline';
-            updateOnlineStatus();
+                currentUser = username;
+                db.ref('loggedInUsers').once('value', snapshot => {
+                    let users = snapshot.val() || [];
+                    if (!users.includes(username)) {
+                        users.push(username);
+                        db.ref('loggedInUsers').set(users);
+                    }
+                    document.getElementById('username').style.display = 'none';
+                    document.getElementById('password').style.display = 'none';
+                    document.getElementById('loginBtn').style.display = 'none';
+                    document.getElementById('logoutBtn').style.display = 'inline';
+                    updateOnlineStatus();
+                });
+            });
         }
 
         function logout() {
@@ -213,11 +229,8 @@
             const nickname = document.getElementById('nickname').value;
             if (nickname) {
                 const time = new Date().toLocaleString('ko-KR');
-                if (!userData[nickname]) {
-                    userData[nickname] = { caution: null, warning: null, ban: null, kick: null };
-                }
-                userData[nickname][type] = { status: [], time, author: currentUser, nickname, type };
-                renderTable();
+                const entry = { status: [], time, author: currentUser, nickname, type };
+                db.ref(`userData/${nickname}/${type}`).set(entry);
                 document.getElementById('nickname').value = '';
             }
         }
@@ -225,27 +238,11 @@
         function saveEdit(nickname, type, value) {
             if (!currentUser || !value) return;
             const time = new Date().toLocaleString('ko-KR');
-            if (!Array.isArray(userData[nickname][type].status)) {
-                userData[nickname][type].status = [];
-            }
-            userData[nickname][type].status.push({ content: value, author: currentUser, time });
-            renderTable();
-        }
-
-        function saveToFile() {
-            const data = {
-                userData: userData,
-                loggedInUsers: loggedInUsers,
-                userPasswords: userPasswords
-            };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'data.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            alert('data.json 파일을 다운로드했습니다. src 폴더에 업로드하세요.');
+            db.ref(`userData/${nickname}/${type}/status`).once('value', snapshot => {
+                const status = snapshot.val() || [];
+                status.push({ content: value, author: currentUser, time });
+                db.ref(`userData/${nickname}/${type}/status`).set(status);
+            });
         }
     </script>
 </body>
