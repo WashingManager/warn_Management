@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>세계정세 재난정보 관리시스템</title>
+    <style>
+        .tooltip { 
+            display: none; 
+            position: absolute; 
+            background: #333; 
+            color: #fff; 
+            padding: 5px; 
+            z-index: 10;
+        }
+        .status:hover .tooltip { display: block; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .online-indicator { 
+            display: inline-block; 
+            width: 4px; 
+            height: 4px; 
+            background: #00ff00; 
+            border-radius: 50%; 
+            margin-left: 5px; 
+            vertical-align: middle;
+        }
+        .edit-input { width: 100px; margin-top: 5px; }
+        .meta-info { opacity: 0.7; font-size: 0.8em; }
+        .message { position: relative; cursor: pointer; }
+        .message:hover .message-time { display: block; }
+        .message-time { 
+            display: none; 
+            position: absolute; 
+            background: #555; 
+            color: #fff; 
+            padding: 3px; 
+            font-size: 0.8em; 
+            top: -25px; 
+            left: 0; 
+            z-index: 20;
+        }
+        td.caution { background-color: rgba(255, 255, 0, 0.2); }
+        td.warning { background-color: rgba(255, 165, 0, 0.3); }
+        td.ban { background-color: rgba(255, 69, 0, 0.4); }
+        td.kick { background-color: rgba(255, 0, 0, 0.5); }
+        tr:nth-child(odd) td.nickname { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>세계정세 재난정보 관리시스템</h1>
+    <input type="text" id="username" placeholder="작성자 이름">
+    <input type="password" id="password" placeholder="비밀번호">
+    <button id="loginBtn" onclick="login()">로그인</button>
+    <button id="logoutBtn" onclick="logout()" style="display:none">로그아웃</button>
+    <span id="onlineStatus"></span>
+    <hr>
+    <input type="text" id="nickname" placeholder="닉네임 입력">
+    <button id="cautionBtn" onclick="addEntry('caution')">주의</button>
+    <button id="warningBtn" onclick="addEntry('warning')">경고</button>
+    <button id="banBtn" onclick="addEntry('ban')">정지</button>
+    <button id="kickBtn" onclick="addEntry('kick')">퇴장</button>
+    <button onclick="saveToFile()">데이터 저장</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>닉네임</th>
+                <th>주의</th>
+                <th>경고</th>
+                <th>정지</th>
+                <th>퇴장</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <script>
+        let currentUser = null;
+        let loggedInUsers = [];
+        let userData = {};
+        let userPasswords = {};
+
+        // 데이터 로드
+        function loadData() {
+            fetch('src/data.json')
+                .then(response => response.json())
+                .then(data => {
+                    userData = data.userData || {};
+                    loggedInUsers = data.loggedInUsers || [];
+                    userPasswords = data.userPasswords || {};
+                    renderTable();
+                })
+                .catch(error => {
+                    console.log('데이터 파일이 없거나 오류 발생:', error);
+                    userData = {};
+                    loggedInUsers = [];
+                    userPasswords = {};
+                    renderTable();
+                });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            Object.keys(userData).forEach(nickname => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="nickname">${nickname}</td>
+                    <td class="caution status">${formatEntry(userData[nickname].caution)}</td>
+                    <td class="warning status">${formatEntry(userData[nickname].warning)}</td>
+                    <td class="ban status">${formatEntry(userData[nickname].ban)}</td>
+                    <td class="kick status">${formatEntry(userData[nickname].kick)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function formatEntry(entry) {
+            if (!entry) return '';
+            let statusHtml = '';
+            if (Array.isArray(entry.status) && entry.status.length > 0) {
+                statusHtml = entry.status.map(s => `
+                    <div class="message">
+                        ${s.content} - <span class="meta-info">${s.author}</span>
+                        <span class="message-time">${s.time}</span>
+                    </div>
+                `).join('');
+            }
+            return `
+                ✓
+                <span class="tooltip">
+                    <span class="meta-info">${entry.time} - ${entry.author}</span>
+                    <br>${statusHtml}
+                    <br><input type="text" class="edit-input" placeholder="추가 내용" onblur="saveEdit('${entry.nickname}', '${entry.type}', this.value)">
+                    <button onclick="saveEdit('${entry.nickname}', '${entry.type}', document.querySelector('.edit-input').value)">추가</button>
+                </span>
+            `;
+        }
+
+        if (currentUser) {
+            document.getElementById('username').style.display = 'none';
+            document.getElementById('password').style.display = 'none';
+            document.getElementById('loginBtn').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'inline';
+            updateOnlineStatus();
+        } else {
+            document.getElementById('username').style.display = 'inline';
+            document.getElementById('password').style.display = 'inline';
+            document.getElementById('loginBtn').style.display = 'inline';
+            document.getElementById('logoutBtn').style.display = 'none';
+        }
+        loadData();
+
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') document.getElementById('loginBtn').click();
+        });
+        document.getElementById('nickname').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') document.getElementById('kickBtn').click();
+        });
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (!username || !password) {
+                alert('작성자 이름과 비밀번호를 입력해주세요!');
+                return;
+            }
+            if (userPasswords[username]) {
+                if (userPasswords[username] !== password) {
+                    alert('비밀번호가 틀렸습니다!');
+                    return;
+                }
+            } else {
+                userPasswords[username] = password;
+            }
+            currentUser = username;
+            if (!loggedInUsers.includes(username)) {
+                loggedInUsers.push(username);
+            }
+            document.getElementById('username').style.display = 'none';
+            document.getElementById('password').style.display = 'none';
+            document.getElementById('loginBtn').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'inline';
+            updateOnlineStatus();
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('username').style.display = 'inline';
+            document.getElementById('password').style.display = 'inline';
+            document.getElementById('loginBtn').style.display = 'inline';
+            document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('onlineStatus').innerHTML = '';
+        }
+
+        function updateOnlineStatus() {
+            const status = document.getElementById('onlineStatus');
+            status.innerHTML = `
+                <span class="status">${currentUser} 접속중</span>
+                <span class="online-indicator"></span>
+                <span class="tooltip">${loggedInUsers.join(', ')}</span>
+                <button id="logoutBtn" onclick="logout()" style="margin-left: 5px;">로그아웃</button>
+            `;
+        }
+
+        function addEntry(type) {
+            if (!currentUser) {
+                alert('로그인 먼저 해주세요!');
+                return;
+            }
+            const nickname = document.getElementById('nickname').value;
+            if (nickname) {
+                const time = new Date().toLocaleString('ko-KR');
+                if (!userData[nickname]) {
+                    userData[nickname] = { caution: null, warning: null, ban: null, kick: null };
+                }
+                userData[nickname][type] = { status: [], time, author: currentUser, nickname, type };
+                renderTable();
+                document.getElementById('nickname').value = '';
+            }
+        }
+
+        function saveEdit(nickname, type, value) {
+            if (!currentUser || !value) return;
+            const time = new Date().toLocaleString('ko-KR');
+            if (!Array.isArray(userData[nickname][type].status)) {
+                userData[nickname][type].status = [];
+            }
+            userData[nickname][type].status.push({ content: value, author: currentUser, time });
+            renderTable();
+        }
+
+        function saveToFile() {
+            const data = {
+                userData: userData,
+                loggedInUsers: loggedInUsers,
+                userPasswords: userPasswords
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'data.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            alert('data.json 파일을 다운로드했습니다. src 폴더에 업로드하세요.');
+        }
+    </script>
+</body>
+</html>
