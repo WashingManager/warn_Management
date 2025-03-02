@@ -1,1 +1,40 @@
-
+{
+  "userData": {
+    "asdgasdg": {
+      "caution": {
+        "status": [
+          {
+            "content": "sdsdg",
+            "author": "asdg",
+            "time": "2025. 3. 2. 오후 7:28:28"
+          }
+        ],
+        "time": "2025. 3. 2. 오후 7:28:24",
+        "author": "asdg",
+        "nickname": "asdgasdg",
+        "type": "caution"
+      },
+      "warning": null,
+      "ban": null,
+      "kick": null
+    },
+    "sadgasdg": {
+      "caution": null,
+      "warning": null,
+      "ban": {
+        "status": [],
+        "time": "2025. 3. 2. 오후 7:28:26",
+        "author": "asdg",
+        "nickname": "sadgasdg",
+        "type": "ban"
+      },
+      "kick": null
+    }
+  },
+  "loggedInUsers": [
+    "asdg"
+  ],
+  "userPasswords": {
+    "asdg": "asdg"
+  }
+}
