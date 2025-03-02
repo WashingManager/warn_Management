@@ -5,161 +5,320 @@
     <title>세계정세 재난정보 관리시스템</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f4f7fa;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 28px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        input[type="text"], input[type="password"] {
-            padding: 10px;
-            margin: 5px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 200px;
-            font-size: 14px;
-        }
-        button {
-            padding: 10px 20px;
-            margin: 5px;
-            border: none;
-            border-radius: 5px;
-            background-color: #3498db;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        .tooltip { 
-            display: none; 
-            position: absolute; 
-            background: #333; 
-            color: #fff; 
-            padding: 5px; 
-            z-index: 10;
-            border-radius: 3px;
-        }
-        .status:hover .tooltip { display: block; }
-        table { 
-            border-collapse: collapse; 
-            width: 100%; 
-            margin-top: 20px; 
-            background: #fff;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 12px; 
-            text-align: center; 
-        }
-        th {
-            background-color: #2c3e50;
-            color: white;
-            font-weight: 700;
-        }
-        .online-indicator { 
-            display: inline-block; 
-            width: 6px; 
-            height: 6px; 
-            background: #27ae60; 
-            border-radius: 50%; 
-            margin-left: 5px; 
-            vertical-align: middle;
-        }
-        .edit-input { 
-            width: 100px; 
-            margin-top: 5px; 
-            padding: 5px; 
-            border: 1px solid #ddd; 
-            border-radius: 3px;
-        }
-        .meta-info { 
-            opacity: 0.7; 
-            font-size: 0.8em; 
-        }
-        .message { 
-            position: relative; 
-            cursor: pointer; 
-        }
-        .message:hover .message-time { 
-            display: block; 
-        }
-        .message-time { 
-            display: none; 
-            position: absolute; 
-            background: #555; 
-            color: #fff; 
-            padding: 3px; 
-            font-size: 0.8em; 
-            top: -25px; 
-            left: 0; 
-            z-index: 20;
-            border-radius: 3px;
-        }
-        td.caution { background-color: rgba(255, 255, 0, 0.2); }
-        td.warning { background-color: rgba(255, 165, 0, 0.3); }
-        td.ban { background-color: rgba(255, 69, 0, 0.4); }
-        td.kick { background-color: rgba(255, 0, 0, 0.5); }
-        tr:nth-child(odd) td.nickname { background-color: #f9f9f9; }
-        hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
-    </style>
+		body {
+			font-family: 'Roboto', sans-serif;
+			background-color: #f4f7fa;
+			margin: 0;
+			padding: 20px;
+			color: #333;
+		}
+		h1 {
+			color: #2c3e50;
+			text-align: center;
+			margin-bottom: 20px;
+			font-size: 28px;
+		}
+		.container {
+			max-width: 1200px;
+			margin: 0 auto;
+			background: #fff;
+			padding: 20px;
+			border-radius: 8px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+		}
+		input[type="text"], input[type="password"] {
+			padding: 10px;
+			margin: 5px 0;
+			border: 1px solid #ddd;
+			border-radius: 5px;
+			width: 200px;
+			font-size: 14px;
+		}
+		button {
+			padding: 10px 20px;
+			margin: 5px;
+			border: none;
+			border-radius: 5px;
+			background-color: #3498db;
+			color: white;
+			cursor: pointer;
+			font-size: 14px;
+			transition: background-color 0.3s;
+		}
+		button:hover {
+			background-color: #2980b9;
+		}
+		.tooltip { 
+			display: none;
+			position: absolute;
+			background: #333;
+			color: #fff;
+			padding: 5px;
+			z-index: 10;
+			border-radius: 3px;
+		}
+		.status:hover .tooltip,
+		.online-indicator:hover + .tooltip,
+		.offline-indicator:hover + .tooltip,
+		.tooltip:hover {
+			display: block;
+		}
+		table { 
+			border-collapse: collapse;
+			width: 100%;
+			margin-top: 20px;
+			background: #fff;
+			border-radius: 5px;
+			overflow: hidden;
+		}
+		th, td { 
+			border: 1px solid #ddd;
+			padding: 12px;
+			text-align: center;
+		}
+		th {
+			background-color: #2c3e50;
+			color: white;
+			font-weight: 700;
+			cursor: pointer;
+			transition: background-color 0.3s;
+		}
+		th:hover {
+			background-color: #3a506b;
+		}
+		.dropdown {
+			position: relative;
+			display: inline-block;
+		}
+		.dropdown-content {
+			display: none;
+			position: absolute;
+			background-color: #ffffff;
+			min-width: 120px;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+			border-radius: 6px;
+			z-index: 10;
+			top: 100%;
+			left: 0;
+			border: 1px solid #e0e0e0;
+		}
+		.dropdown:hover .dropdown-content {
+			display: block;
+		}
+		.dropdown-content button,
+		.dropdown-content .delete-btn {
+			display: block;
+			width: 100%;
+			text-align: left;
+			padding: 8px 12px;
+			margin: 0;
+			border: none;
+			background-color: transparent;
+			color: #333;
+			font-size: 14px;
+			cursor: pointer;
+			transition: background-color 0.2s ease, color 0.2s ease;
+		}
+		.dropdown-content button:hover {
+			background-color: #f5f5f5;
+		}
+		.dropdown-content .delete-btn {
+			color: #d32f2f; /* 탈퇴 버튼 기본 색상 */
+		}
+		.dropdown-content .delete-btn:hover {
+			background-color: #ffebee;
+			color: #b71c1c;
+		}
+		.nickname-span {
+			cursor: pointer;
+			color: #2c3e50;
+			font-weight: 500;
+			transition: color 0.2s ease;
+		}
+		.dropdown:hover .nickname-span {
+			color: #3498db;
+		}
+		.online-indicator { 
+			display: inline-block;
+			width: 6px;
+			height: 6px;
+			background: #27ae60;
+			border-radius: 50%;
+			margin-left: 5px;
+			vertical-align: middle;
+			cursor: pointer;
+		}
+		.offline-indicator { 
+			display: inline-block;
+			width: 6px;
+			height: 6px;
+			background: #808080;
+			border-radius: 50%;
+			margin-left: 5px;
+			vertical-align: middle;
+			cursor: pointer;
+		}
+		.edit-input { 
+			width: 100px;
+			margin-top: 5px;
+			padding: 5px;
+			border: 1px solid #ddd;
+			border-radius: 3px;
+		}
+		.meta-info { 
+			opacity: 0.7;
+			font-size: 0.8em;
+		}
+		.message { 
+			position: relative;
+			cursor: pointer;
+		}
+		.message:hover .message-time { 
+			display: block;
+		}
+		.message-time { 
+			display: none;
+			position: absolute;
+			background: #555;
+			color: #fff;
+			padding: 3px;
+			font-size: 0.8em;
+			top: -25px;
+			left: 0;
+			z-index: 20;
+			border-radius: 3px;
+		}
+		td.caution { background-color: rgba(255, 255, 0, 0.2); }
+		td.warning { background-color: rgba(255, 69, 0, 0.4); }
+		td.ban { background-color: rgba(255, 165, 0, 0.3); }
+		td.kick { background-color: rgba(255, 0, 0, 0.5); }
+		tr:nth-child(odd) td.nickname { background-color: #f9f9f9; }
+		hr { 
+			border: 0;
+			border-top: 1px solid #eee;
+			margin: 20px 0;
+		}
+		.modal {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.5);
+			z-index: 100;
+		}
+		.modal-content {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			background: #fff;
+			padding: 20px;
+			border-radius: 8px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+			text-align: center;
+		}
+		.modal-content input {
+			margin: 10px 0;
+		}
+		#registerForm { display: none; }
+		.divider { 
+			border: 0;
+			border-top: 1px solid #ddd;
+			opacity: 0.5;
+			margin: 5px 0;
+		}
+		.card-container {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 10px;
+			margin-bottom: 5px;
+		}
+		.yellow-card, .red-card {
+			display: inline-block;
+			width: 20px;
+			height: 30px;
+			border: 1px solid black;
+		}
+		.yellow-card { background-color: #ffeb3b; }
+		.red-card { background-color: #f44336; }
+	</style>
 </head>
 <body>
     <div class="container">
         <h1>세계정세 재난정보 관리시스템</h1>
-        <input type="text" id="username" placeholder="작성자 이름">
-        <input type="password" id="password" placeholder="비밀번호">
-        <input type="password" id="passwordConfirm" placeholder="비밀번호 확인" style="display:none;">
-        <button id="loginBtn" onclick="login()">로그인</button>
-        <button id="registerBtn" onclick="register()">회원가입</button>
-        <button id="logoutBtn" onclick="logout()" style="display:none">로그아웃</button>
+		        
+        <div id="loginForm">
+            <input type="text" id="username" placeholder="작성자 이름">
+            <input type="password" id="password" placeholder="비밀번호">
+            <button id="loginBtn" onclick="login()">로그인</button>
+            <button id="registerBtn" onclick="openRegisterModal()">회원가입</button>
+        </div>
+        <div id="registerForm">
+            <input type="text" id="regUsername" placeholder="작성자 이름">
+            <input type="password" id="regPassword" placeholder="비밀번호">
+            <input type="password" id="regPasswordConfirm" placeholder="비밀번호 확인">
+            <button onclick="completeRegister()">가입</button>
+        </div>
         <span id="onlineStatus"></span>
-        <hr>
         <input type="text" id="nickname" placeholder="닉네임 입력">
-        <button id="cautionBtn" onclick="addEntry('caution')">주의</button>
-        <button id="warningBtn" onclick="addEntry('warning')">경고</button>
-        <button id="banBtn" onclick="addEntry('ban')">정지</button>
-        <button id="kickBtn" onclick="addEntry('kick')">퇴장</button>
+		<hr>
+        <!-- <button id="cautionBtn" onclick="addEntry('caution')">주의</button> -->
+        <!-- <button id="banBtn" onclick="addEntry('ban')">정지</button> -->
+        <!-- <button id="warningBtn" onclick="addEntry('warning')">경고</button> -->
+        <!-- <button id="kickBtn" onclick="addEntry('kick')">퇴장</button> -->
+
 
         <table>
             <thead>
                 <tr>
                     <th>닉네임</th>
-                    <th>주의</th>
-                    <th>경고</th>
-                    <th>정지</th>
-                    <th>퇴장</th>
+                    <th onclick="addEntry('caution')">주의</th>
+					<th onclick="addEntry('ban')">정지</th>
+					<th onclick="addEntry('warning')">경고</th>
+					<th onclick="addEntry('kick')">퇴장</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
 
-    <!-- Firebase 8.x CDN -->
+    <!-- 초대코드 입력 모달 -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <h2>초대코드 입력</h2>
+            <input type="text" id="inviteCodeInput" placeholder="초대코드를 입력하세요">
+            <button onclick="checkInviteCode()">확인</button>
+            <button onclick="closeRegisterModal()">취소</button>
+        </div>
+    </div>
+
+    <!-- 데이터 초기화 모달 -->
+    <div id="resetModal" class="modal">
+        <div class="modal-content">
+            <h2>관리자 코드 입력</h2>
+            <input type="text" id="adminCodeInput" placeholder="관리자 코드를 입력하세요">
+            <button onclick="resetData()">초기화</button>
+            <button onclick="closeResetModal()">취소</button>
+        </div>
+    </div>
+	<!-- 데이터 초기화 모달 아래에 추가 -->
+	<div id="deleteModal" class="modal">
+		<div class="modal-content">
+			<h2>관리자 승인 코드 입력</h2>
+			<input type="text" id="deleteCodeInput" placeholder="관리자 코드를 입력하세요">
+			<button onclick="deleteUser()">탈퇴</button>
+			<button onclick="closeDeleteModal()">취소</button>
+		</div>
+	</div>
+	    <!-- Firebase 8.x CDN -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script>
-        // Firebase 설정 (실제 값으로 교체 필요)
-        const firebaseConfig = {
+        // Firebase 설정 (나중에 깃허브에서 사용 시 주석 해제)
+		const firebaseConfig = {
 			apiKey: "AIzaSyB0RfhCYOTARxVqH3ejYQH5dHJI5KEQZpc",
 			authDomain: "worldinfowarn.firebaseapp.com",
 			databaseURL: "https://worldinfowarn-default-rtdb.firebaseio.com",
@@ -171,90 +330,106 @@
 		  };
 
 
-        // Firebase 초기화
-        let db;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
-            console.log("Firebase 초기화 성공");
-        } catch (error) {
-            console.error("Firebase 초기화 실패:", error);
-            alert("Firebase 설정에 문제가 있습니다. 설정값을 확인하세요.");
-            return;
-        }
-
-        let currentUser = null;
-        let loggedInUsers = [];
-        let userData = {};
-        let userPasswords = {};
+        // 로컬 데이터 초기화
+        let currentUser = localStorage.getItem('currentUser') || null;
+        let loggedInUsers = JSON.parse(localStorage.getItem('loggedInUsers')) || [];
+        let userData = JSON.parse(localStorage.getItem('userData')) || {};
+        let userPasswords = JSON.parse(localStorage.getItem('userPasswords')) || {};
+        const INVITE_CODE = "WARM";
+        const ADMIN_CODE = "DELETE";
 
         // 데이터 로드
         function loadData() {
-            db.ref('/').on('value', (snapshot) => {
-                const data = snapshot.val() || {};
-                userData = data.userData || {};
-                loggedInUsers = data.loggedInUsers || [];
-                userPasswords = data.userPasswords || {};
-                console.log("데이터 로드:", data);
-                renderTable();
-                if (currentUser) updateOnlineStatus();
-            }, (error) => {
-                console.error("데이터 로드 오류:", error);
-                alert("데이터를 불러오는 데 실패했습니다.");
-            });
+            renderTable();
+            if (currentUser) updateOnlineStatus();
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('currentUser', currentUser);
+            localStorage.setItem('loggedInUsers', JSON.stringify(loggedInUsers));
+            localStorage.setItem('userData', JSON.stringify(userData));
+            localStorage.setItem('userPasswords', JSON.stringify(userPasswords));
         }
 
         function renderTable() {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            Object.keys(userData).forEach(nickname => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="nickname">${nickname}</td>
-                    <td class="caution status">${formatEntry(userData[nickname].caution)}</td>
-                    <td class="warning status">${formatEntry(userData[nickname].warning)}</td>
-                    <td class="ban status">${formatEntry(userData[nickname].ban)}</td>
-                    <td class="kick status">${formatEntry(userData[nickname].kick)}</td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
+			const tbody = document.getElementById('tableBody');
+			tbody.innerHTML = '';
+			Object.keys(userData).forEach(nickname => {
+				const row = document.createElement('tr');
+				row.innerHTML = `
+					<td class="nickname">${nickname}</td>
+					<td class="caution status">${formatEntry(userData[nickname].caution)}</td>
+					<td class="ban status">${formatEntry(userData[nickname].ban)}</td>
+					<td class="warning status">${formatEntry(userData[nickname].warning)}</td>
+					<td class="kick status">${formatEntry(userData[nickname].kick)}</td>
+				`;
+				tbody.appendChild(row);
+			});
+		}
 
         function formatEntry(entry) {
-            if (!entry) return '';
-            let statusHtml = '';
-            if (Array.isArray(entry.status) && entry.status.length > 0) {
-                statusHtml = entry.status.map(s => `
-                    <div class="message">
-                        ${s.content} - <span class="meta-info">${s.author}</span>
-                        <span class="message-time">${s.time}</span>
-                    </div>
-                `).join('');
-            }
-            return `
-                ✓
-                <span class="tooltip">
-                    <span class="meta-info">${entry.time} - ${entry.author}</span>
-                    <br>${statusHtml}
-                    <br><input type="text" class="edit-input" placeholder="추가 내용" onblur="saveEdit('${entry.nickname}', '${entry.type}', this.value)">
-                    <button onclick="saveEdit('${entry.nickname}', '${entry.type}', document.querySelector('.edit-input').value)">추가</button>
-                </span>
-            `;
-        }
+			if (!entry || !entry.status) return '';
+
+			let cardHtml = '';
+			if (entry.status.length > 0) {
+				if (entry.type === 'kick') {
+					cardHtml += `<span class="red-card"></span>`;
+				} else {
+					cardHtml += `<span class="yellow-card"></span>`;
+					if (entry.status.length >= 2) {
+						cardHtml += `<span class="red-card"></span>`;
+					}
+				}
+			}
+
+			let statusHtml = '';
+			if (entry.status.length > 0) {
+				statusHtml = entry.status.map((s, index) => {
+					let typeKorean = '';
+					switch (s.content) {
+						case 'caution': typeKorean = '주의'; break;
+						case 'ban': typeKorean = '정지'; break;
+						case 'warning': typeKorean = '경고'; break;
+						case 'kick': typeKorean = '퇴장'; break;
+						default: typeKorean = s.content;
+					}
+					return `
+						<div class="message">
+							${typeKorean} ${index + 1} - <span class="meta-info">${s.author} (${s.time})</span>
+						</div>
+					`;
+				}).join('');
+			}
+
+			let descHtml = '';
+			if (entry.descriptions && entry.descriptions.length > 0) {
+				descHtml = entry.descriptions.map(d => `
+					<div class="message">
+						${d.content} - <span class="meta-info">${d.author} (${d.time})</span>
+					</div>
+				`).join('');
+			}
+
+			return `
+				<div class="card-container">${cardHtml}</div>
+				<span class="tooltip">
+					${statusHtml}
+					${descHtml ? '<hr class="divider">' + descHtml : ''}
+					<hr class="divider">
+					<input type="text" class="edit-input" placeholder="설명" onblur="saveEdit('${entry.nickname}', '${entry.type}', this.value)">
+					<button onclick="saveEdit('${entry.nickname}', '${entry.type}', document.querySelector('.edit-input').value)">추가</button>
+				</span>
+			`;
+		}
 
         // 초기 상태 설정
         if (currentUser) {
-            document.getElementById('username').style.display = 'none';
-            document.getElementById('password').style.display = 'none';
-            document.getElementById('loginBtn').style.display = 'none';
-            document.getElementById('logoutBtn').style.display = 'inline';
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
             updateOnlineStatus();
         } else {
-            document.getElementById('username').style.display = 'inline';
-            document.getElementById('password').style.display = 'inline';
-            document.getElementById('loginBtn').style.display = 'inline';
-            document.getElementById('registerBtn').style.display = 'inline';
-            document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
         }
         loadData();
 
@@ -262,7 +437,7 @@
             if (e.key === 'Enter') document.getElementById('loginBtn').click();
         });
         document.getElementById('nickname').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') document.getElementById('kickBtn').click();
+            if (e.key === 'Enter') document.getElementById('cautionBtn').click();
         });
 
         function login() {
@@ -272,37 +447,49 @@
                 alert('작성자 이름과 비밀번호를 입력해주세요!');
                 return;
             }
-            db.ref('userPasswords/' + username).once('value', snapshot => {
-                const storedPassword = snapshot.val();
-                if (!storedPassword) {
-                    alert('등록된 사용자가 아닙니다. 회원가입을 진행해주세요.');
-                    return;
-                }
-                if (storedPassword !== password) {
-                    alert('비밀번호가 틀렸습니다!');
-                    return;
-                }
-                currentUser = username;
-                db.ref('loggedInUsers').once('value', snapshot => {
-                    let users = snapshot.val() || [];
-                    if (!users.includes(username)) {
-                        users.push(username);
-                        db.ref('loggedInUsers').set(users);
-                    }
-                    document.getElementById('username').style.display = 'none';
-                    document.getElementById('password').style.display = 'none';
-                    document.getElementById('loginBtn').style.display = 'none';
-                    document.getElementById('registerBtn').style.display = 'none';
-                    document.getElementById('logoutBtn').style.display = 'inline';
-                    updateOnlineStatus();
-                });
-            });
+            if (!userPasswords[username]) {
+                alert('등록된 사용자가 아닙니다. 회원가입을 진행해주세요.');
+                return;
+            }
+            if (userPasswords[username] !== password) {
+                alert('비밀번호가 틀렸습니다!');
+                return;
+            }
+            currentUser = username;
+            loggedInUsers = [username];
+            document.getElementById('loginForm').style.display = 'none';
+            saveToLocalStorage();
+            updateOnlineStatus();
         }
 
-        function register() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const passwordConfirm = document.getElementById('passwordConfirm').value;
+        function openRegisterModal() {
+            document.getElementById('registerModal').style.display = 'block';
+            document.getElementById('inviteCodeInput').value = '';
+        }
+
+        function closeRegisterModal() {
+            document.getElementById('registerModal').style.display = 'none';
+        }
+
+        function checkInviteCode() {
+            const inviteCode = document.getElementById('inviteCodeInput').value;
+            if (inviteCode !== INVITE_CODE) {
+                alert('초대코드가 올바르지 않습니다!');
+                return;
+            }
+            alert('승인되었습니다');
+            closeRegisterModal();
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regPasswordConfirm').value = '';
+        }
+
+        function completeRegister() {
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const passwordConfirm = document.getElementById('regPasswordConfirm').value;
             if (!username || !password || !passwordConfirm) {
                 alert('이름과 비밀번호, 비밀번호 확인을 모두 입력해주세요!');
                 return;
@@ -311,76 +498,179 @@
                 alert('비밀번호와 비밀번호 확인이 일치하지 않습니다!');
                 return;
             }
-            db.ref('userPasswords/' + username).once('value', snapshot => {
-                if (snapshot.val()) {
-                    alert('이미 등록된 사용자입니다. 로그인해주세요.');
-                    return;
-                }
-                db.ref('userPasswords/' + username).set(password, error => {
-                    if (error) {
-                        alert('회원가입에 실패했습니다.');
-                        console.error("회원가입 오류:", error);
-                    } else {
-                        alert('회원가입이 완료되었습니다. 로그인해주세요.');
-                        document.getElementById('password').value = '';
-                        document.getElementById('passwordConfirm').value = '';
-                        document.getElementById('passwordConfirm').style.display = 'none';
-                    }
-                });
-            });
+            if (userPasswords[username]) {
+                alert('이미 등록된 사용자입니다. 로그인해주세요.');
+                return;
+            }
+            userPasswords[username] = password;
+            saveToLocalStorage();
+            alert('회원가입이 완료되었습니다. 로그인해주세요.');
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
         }
-
-        function toggleRegisterMode() {
-            const confirmField = document.getElementById('passwordConfirm');
-            confirmField.style.display = confirmField.style.display === 'none' ? 'inline' : 'none';
-        }
-        document.getElementById('registerBtn').addEventListener('click', toggleRegisterMode);
 
         function logout() {
             currentUser = null;
+            loggedInUsers = [];
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
-            document.getElementById('username').style.display = 'inline';
-            document.getElementById('password').style.display = 'inline';
-            document.getElementById('loginBtn').style.display = 'inline';
-            document.getElementById('registerBtn').style.display = 'inline';
-            document.getElementById('logoutBtn').style.display = 'none';
             document.getElementById('onlineStatus').innerHTML = '';
+            saveToLocalStorage();
         }
 
         function updateOnlineStatus() {
-            const status = document.getElementById('onlineStatus');
-            status.innerHTML = `
-                <span class="status">${currentUser} 접속중</span>
-                <span class="online-indicator"></span>
-                <span class="tooltip">${loggedInUsers.join(', ')}</span>
-                <button id="logoutBtn" onclick="logout()" style="margin-left: 5px;">로그아웃</button>
-            `;
-        }
+			const status = document.getElementById('onlineStatus');
+			const userList = Object.keys(userPasswords).map(user => {
+				const isOnline = currentUser === user ? '<span class="online-indicator"></span>' : '<span class="offline-indicator"></span>';
+				return `${user} ${isOnline}`;
+			}).join('<br>');
+			status.innerHTML = `
+				<span class="status">
+					<div class="dropdown">
+						<span class="nickname-span">${currentUser}</span>
+						<div class="dropdown-content">
+							<button onclick="logout()">로그아웃</button>
+							<button onclick="openResetModal()">데이터 초기화</button>
+							<span class="delete-btn" onclick="openDeleteModal()">탈퇴</span>
+						</div>
+					</div>
+					접속중
+				</span>
+				<span class="online-indicator"></span>
+				<span class="tooltip">${userList}</span>
+			`;
+		}
 
         function addEntry(type) {
-            if (!currentUser) {
-                alert('로그인 먼저 해주세요!');
-                return;
-            }
-            const nickname = document.getElementById('nickname').value;
-            if (nickname) {
-                const time = new Date().toLocaleString('ko-KR');
-                const entry = { status: [], time, author: currentUser, nickname, type };
-                db.ref(`userData/${nickname}/${type}`).set(entry);
-                document.getElementById('nickname').value = '';
-            }
-        }
+			if (!currentUser) {
+				alert('로그인 먼저 해주세요!');
+				return;
+			}
+			const nickname = document.getElementById('nickname').value;
+			if (!nickname) return;
+
+			const time = new Date().toLocaleString('ko-KR');
+			if (!userData[nickname]) {
+				userData[nickname] = { 
+					caution: { status: [], descriptions: [] },
+					ban: { status: [], descriptions: [] },
+					warning: { status: [], descriptions: [] },
+					kick: { status: [], descriptions: [] }
+				};
+			}
+
+			if (!userData[nickname][type].status.length) {
+				userData[nickname][type].time = time;
+				userData[nickname][type].author = currentUser;
+				userData[nickname][type].nickname = nickname;
+				userData[nickname][type].type = type;
+			}
+
+			const status = userData[nickname][type].status;
+			status.push({ content: type, author: currentUser, time });
+
+			// 횟수 체크 및 전환
+			if (type === 'caution' && status.length >= 2) {
+				userData[nickname].caution.status = status.slice(0, 2);
+				userData[nickname].ban.status = [{ content: 'ban', author: currentUser, time }];
+				userData[nickname].ban.time = time;
+				userData[nickname].ban.author = currentUser;
+				userData[nickname].ban.nickname = nickname;
+				userData[nickname].ban.type = 'ban';
+			} else if (type === 'ban' && status.length >= 2) {
+				userData[nickname].ban.status = status.slice(0, 2);
+				userData[nickname].warning.status = [{ content: 'warning', author: currentUser, time }];
+				userData[nickname].warning.time = time;
+				userData[nickname].warning.author = currentUser;
+				userData[nickname].warning.nickname = nickname;
+				userData[nickname].warning.type = 'warning';
+			} else if (type === 'warning' && status.length >= 2) {
+				userData[nickname].warning.status = status.slice(0, 2);
+				userData[nickname].kick.status = [{ content: 'kick', author: currentUser, time }];
+				userData[nickname].kick.time = time;
+				userData[nickname].kick.author = currentUser;
+				userData[nickname].kick.nickname = nickname;
+				userData[nickname].kick.type = 'kick';
+			} else if (type === 'kick') {
+				userData[nickname].kick.status = status.slice(0, 1);
+			}
+
+			saveToLocalStorage();
+			renderTable();
+			document.getElementById('nickname').value = '';
+		}
 
         function saveEdit(nickname, type, value) {
-            if (!currentUser || !value) return;
-            const time = new Date().toLocaleString('ko-KR');
-            db.ref(`userData/${nickname}/${type}/status`).once('value', snapshot => {
-                const status = snapshot.val() || [];
-                status.push({ content: value, author: currentUser, time });
-                db.ref(`userData/${nickname}/${type}/status`).set(status);
-            });
+			if (!currentUser || !value) return;
+			const time = new Date().toLocaleString('ko-KR');
+			if (!userData[nickname][type].descriptions) {
+				userData[nickname][type].descriptions = [];
+			}
+			userData[nickname][type].descriptions.push({ content: value, author: currentUser, time });
+			saveToLocalStorage();
+			renderTable();
+		}
+
+        function openResetModal() {
+            document.getElementById('resetModal').style.display = 'block';
+            document.getElementById('adminCodeInput').value = '';
         }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').style.display = 'none';
+        }
+
+        function resetData() {
+            const adminCode = document.getElementById('adminCodeInput').value;
+            if (adminCode !== ADMIN_CODE) {
+                alert('관리자 코드가 올바르지 않습니다!');
+                return;
+            }
+            userData = {};
+            saveToLocalStorage();
+            renderTable();
+            closeResetModal();
+            alert('닉네임 데이터가 초기화되었습니다.');
+        }
+		function openDeleteModal() {
+			document.getElementById('deleteModal').style.display = 'block';
+			document.getElementById('deleteCodeInput').value = '';
+		}
+
+		function closeDeleteModal() {
+			document.getElementById('deleteModal').style.display = 'none';
+		}
+
+		function deleteUser() {
+			const deleteCode = document.getElementById('deleteCodeInput').value;
+			if (deleteCode !== ADMIN_CODE) {
+				alert('관리자 코드가 올바르지 않습니다!');
+				return;
+			}
+			if (!currentUser) {
+				alert('탈퇴할 사용자가 없습니다!');
+				return;
+			}
+			delete userPasswords[currentUser]; // 가입자 데이터 삭제
+			userData = Object.fromEntries(
+				Object.entries(userData).filter(([nickname]) => nickname !== currentUser)
+			); // 닉네임 데이터에서 탈퇴자 제거
+			currentUser = null;
+			loggedInUsers = [];
+			saveToLocalStorage();
+			document.getElementById('loginForm').style.display = 'block';
+			document.getElementById('registerForm').style.display = 'none';
+			document.getElementById('username').value = '';
+			document.getElementById('password').value = '';
+			document.getElementById('onlineStatus').innerHTML = '';
+			renderTable();
+			closeDeleteModal();
+			alert('탈퇴가 완료되었습니다.');
+		}
     </script>
 </body>
 </html>
