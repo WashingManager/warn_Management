@@ -3,7 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <title>세계정세 재난정보 관리시스템</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"], input[type="password"] {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 200px;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
         .tooltip { 
             display: none; 
             position: absolute; 
@@ -11,23 +55,54 @@
             color: #fff; 
             padding: 5px; 
             z-index: 10;
+            border-radius: 3px;
         }
         .status:hover .tooltip { display: block; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            margin-top: 20px; 
+            background: #fff;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 12px; 
+            text-align: center; 
+        }
+        th {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: 700;
+        }
         .online-indicator { 
             display: inline-block; 
-            width: 4px; 
-            height: 4px; 
-            background: #00ff00; 
+            width: 6px; 
+            height: 6px; 
+            background: #27ae60; 
             border-radius: 50%; 
             margin-left: 5px; 
             vertical-align: middle;
         }
-        .edit-input { width: 100px; margin-top: 5px; }
-        .meta-info { opacity: 0.7; font-size: 0.8em; }
-        .message { position: relative; cursor: pointer; }
-        .message:hover .message-time { display: block; }
+        .edit-input { 
+            width: 100px; 
+            margin-top: 5px; 
+            padding: 5px; 
+            border: 1px solid #ddd; 
+            border-radius: 3px;
+        }
+        .meta-info { 
+            opacity: 0.7; 
+            font-size: 0.8em; 
+        }
+        .message { 
+            position: relative; 
+            cursor: pointer; 
+        }
+        .message:hover .message-time { 
+            display: block; 
+        }
         .message-time { 
             display: none; 
             position: absolute; 
@@ -38,47 +113,53 @@
             top: -25px; 
             left: 0; 
             z-index: 20;
+            border-radius: 3px;
         }
         td.caution { background-color: rgba(255, 255, 0, 0.2); }
         td.warning { background-color: rgba(255, 165, 0, 0.3); }
         td.ban { background-color: rgba(255, 69, 0, 0.4); }
         td.kick { background-color: rgba(255, 0, 0, 0.5); }
-        tr:nth-child(odd) td.nickname { background-color: #f2f2f2; }
+        tr:nth-child(odd) td.nickname { background-color: #f9f9f9; }
+        hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
     </style>
 </head>
 <body>
-    <h1>세계정세 재난정보 관리시스템</h1>
-    <input type="text" id="username" placeholder="작성자 이름">
-    <input type="password" id="password" placeholder="비밀번호">
-    <button id="loginBtn" onclick="login()">로그인</button>
-    <button id="logoutBtn" onclick="logout()" style="display:none">로그아웃</button>
-    <span id="onlineStatus"></span>
-    <hr>
-    <input type="text" id="nickname" placeholder="닉네임 입력">
-    <button id="cautionBtn" onclick="addEntry('caution')">주의</button>
-    <button id="warningBtn" onclick="addEntry('warning')">경고</button>
-    <button id="banBtn" onclick="addEntry('ban')">정지</button>
-    <button id="kickBtn" onclick="addEntry('kick')">퇴장</button>
+    <div class="container">
+        <h1>세계정세 재난정보 관리시스템</h1>
+        <input type="text" id="username" placeholder="작성자 이름">
+        <input type="password" id="password" placeholder="비밀번호">
+        <input type="password" id="passwordConfirm" placeholder="비밀번호 확인" style="display:none;">
+        <button id="loginBtn" onclick="login()">로그인</button>
+        <button id="registerBtn" onclick="register()">회원가입</button>
+        <button id="logoutBtn" onclick="logout()" style="display:none">로그아웃</button>
+        <span id="onlineStatus"></span>
+        <hr>
+        <input type="text" id="nickname" placeholder="닉네임 입력">
+        <button id="cautionBtn" onclick="addEntry('caution')">주의</button>
+        <button id="warningBtn" onclick="addEntry('warning')">경고</button>
+        <button id="banBtn" onclick="addEntry('ban')">정지</button>
+        <button id="kickBtn" onclick="addEntry('kick')">퇴장</button>
 
-    <table>
-        <thead>
-            <tr>
-                <th>닉네임</th>
-                <th>주의</th>
-                <th>경고</th>
-                <th>정지</th>
-                <th>퇴장</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-    </table>
+        <table>
+            <thead>
+                <tr>
+                    <th>닉네임</th>
+                    <th>주의</th>
+                    <th>경고</th>
+                    <th>정지</th>
+                    <th>퇴장</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
 
-    <!-- Firebase 8.x CDN (레거시 버전) -->
+    <!-- Firebase 8.x CDN -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script>
-        // Firebase 설정 (아래 값을 실제 값으로 교체)
-         const firebaseConfig = {
+        // Firebase 설정 (실제 값으로 교체 필요)
+        const firebaseConfig = {
 			apiKey: "AIzaSyB0RfhCYOTARxVqH3ejYQH5dHJI5KEQZpc",
 			authDomain: "worldinfowarn.firebaseapp.com",
 			databaseURL: "https://worldinfowarn-default-rtdb.firebaseio.com",
@@ -91,21 +172,23 @@
 
 
         // Firebase 초기화
+        let db;
         try {
             firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
             console.log("Firebase 초기화 성공");
         } catch (error) {
             console.error("Firebase 초기화 실패:", error);
             alert("Firebase 설정에 문제가 있습니다. 설정값을 확인하세요.");
+            return;
         }
 
-        const db = firebase.database();
         let currentUser = null;
         let loggedInUsers = [];
         let userData = {};
         let userPasswords = {};
 
-        // 데이터 로드 (실시간 리스닝)
+        // 데이터 로드
         function loadData() {
             db.ref('/').on('value', (snapshot) => {
                 const data = snapshot.val() || {};
@@ -159,6 +242,7 @@
             `;
         }
 
+        // 초기 상태 설정
         if (currentUser) {
             document.getElementById('username').style.display = 'none';
             document.getElementById('password').style.display = 'none';
@@ -169,6 +253,7 @@
             document.getElementById('username').style.display = 'inline';
             document.getElementById('password').style.display = 'inline';
             document.getElementById('loginBtn').style.display = 'inline';
+            document.getElementById('registerBtn').style.display = 'inline';
             document.getElementById('logoutBtn').style.display = 'none';
         }
         loadData();
@@ -189,13 +274,13 @@
             }
             db.ref('userPasswords/' + username).once('value', snapshot => {
                 const storedPassword = snapshot.val();
-                if (storedPassword) {
-                    if (storedPassword !== password) {
-                        alert('비밀번호가 틀렸습니다!');
-                        return;
-                    }
-                } else {
-                    db.ref('userPasswords/' + username).set(password);
+                if (!storedPassword) {
+                    alert('등록된 사용자가 아닙니다. 회원가입을 진행해주세요.');
+                    return;
+                }
+                if (storedPassword !== password) {
+                    alert('비밀번호가 틀렸습니다!');
+                    return;
                 }
                 currentUser = username;
                 db.ref('loggedInUsers').once('value', snapshot => {
@@ -207,11 +292,49 @@
                     document.getElementById('username').style.display = 'none';
                     document.getElementById('password').style.display = 'none';
                     document.getElementById('loginBtn').style.display = 'none';
+                    document.getElementById('registerBtn').style.display = 'none';
                     document.getElementById('logoutBtn').style.display = 'inline';
                     updateOnlineStatus();
                 });
             });
         }
+
+        function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const passwordConfirm = document.getElementById('passwordConfirm').value;
+            if (!username || !password || !passwordConfirm) {
+                alert('이름과 비밀번호, 비밀번호 확인을 모두 입력해주세요!');
+                return;
+            }
+            if (password !== passwordConfirm) {
+                alert('비밀번호와 비밀번호 확인이 일치하지 않습니다!');
+                return;
+            }
+            db.ref('userPasswords/' + username).once('value', snapshot => {
+                if (snapshot.val()) {
+                    alert('이미 등록된 사용자입니다. 로그인해주세요.');
+                    return;
+                }
+                db.ref('userPasswords/' + username).set(password, error => {
+                    if (error) {
+                        alert('회원가입에 실패했습니다.');
+                        console.error("회원가입 오류:", error);
+                    } else {
+                        alert('회원가입이 완료되었습니다. 로그인해주세요.');
+                        document.getElementById('password').value = '';
+                        document.getElementById('passwordConfirm').value = '';
+                        document.getElementById('passwordConfirm').style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        function toggleRegisterMode() {
+            const confirmField = document.getElementById('passwordConfirm');
+            confirmField.style.display = confirmField.style.display === 'none' ? 'inline' : 'none';
+        }
+        document.getElementById('registerBtn').addEventListener('click', toggleRegisterMode);
 
         function logout() {
             currentUser = null;
@@ -220,6 +343,7 @@
             document.getElementById('username').style.display = 'inline';
             document.getElementById('password').style.display = 'inline';
             document.getElementById('loginBtn').style.display = 'inline';
+            document.getElementById('registerBtn').style.display = 'inline';
             document.getElementById('logoutBtn').style.display = 'none';
             document.getElementById('onlineStatus').innerHTML = '';
         }
