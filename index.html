@@ -73,12 +73,12 @@
         <tbody id="tableBody"></tbody>
     </table>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <!-- Firebase 8.x CDN (레거시 버전) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script>
-        // Firebase 설정 (프로젝트 생성 후 제공된 값으로 교체)
-		  const firebaseConfig = {
+        // Firebase 설정 (아래 값을 실제 값으로 교체)
+         const firebaseConfig = {
 			apiKey: "AIzaSyB0RfhCYOTARxVqH3ejYQH5dHJI5KEQZpc",
 			authDomain: "worldinfowarn.firebaseapp.com",
 			databaseURL: "https://worldinfowarn-default-rtdb.firebaseio.com",
@@ -88,9 +88,18 @@
 			appId: "1:334505201044:web:a01144c9cbc0f9ef271381",
 			measurementId: "G-78ZVZD2TG2"
 		  };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
 
+
+        // Firebase 초기화
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase 초기화 성공");
+        } catch (error) {
+            console.error("Firebase 초기화 실패:", error);
+            alert("Firebase 설정에 문제가 있습니다. 설정값을 확인하세요.");
+        }
+
+        const db = firebase.database();
         let currentUser = null;
         let loggedInUsers = [];
         let userData = {};
@@ -98,13 +107,17 @@
 
         // 데이터 로드 (실시간 리스닝)
         function loadData() {
-            db.ref('/').on('value', snapshot => {
+            db.ref('/').on('value', (snapshot) => {
                 const data = snapshot.val() || {};
                 userData = data.userData || {};
                 loggedInUsers = data.loggedInUsers || [];
                 userPasswords = data.userPasswords || {};
+                console.log("데이터 로드:", data);
                 renderTable();
                 if (currentUser) updateOnlineStatus();
+            }, (error) => {
+                console.error("데이터 로드 오류:", error);
+                alert("데이터를 불러오는 데 실패했습니다.");
             });
         }
 
