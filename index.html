@@ -334,7 +334,7 @@
 		const db = firebase.database();
 
 
-        let currentUser = null;
+        let currentUser = localStorage.getItem('currentUser') || null; // 새로고침 시 복원
         let loggedInUsers = [];
         let userData = {};
         let userPasswords = {};
@@ -376,13 +376,17 @@
                     });
                 });
                 renderTable();
-                if (currentUser && !loggedInUsers.includes(currentUser)) {
+                // currentUser 복원 및 검증
+                if (currentUser && loggedInUsers.includes(currentUser) && userPasswords[currentUser]) {
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('registerForm').style.display = 'none';
+                    updateOnlineStatus();
+                } else {
                     currentUser = null;
+                    localStorage.removeItem('currentUser');
                     document.getElementById('loginForm').style.display = 'block';
                     document.getElementById('registerForm').style.display = 'none';
                     document.getElementById('onlineStatus').innerHTML = '';
-                } else if (currentUser) {
-                    updateOnlineStatus();
                 }
             }, (error) => {
                 console.error("Firebase 불러오기 오류:", error);
@@ -460,6 +464,7 @@
             `;
         }
 
+        // 초기 상태 설정
         document.getElementById('loginForm').style.display = 'block';
         document.getElementById('registerForm').style.display = 'none';
         loadData();
@@ -488,6 +493,7 @@
             }
             currentUser = username;
             if (!loggedInUsers.includes(username)) loggedInUsers.push(username);
+            localStorage.setItem('currentUser', currentUser); // 로그인 시 저장
             document.getElementById('loginForm').style.display = 'none';
             saveToFirebase();
             updateOnlineStatus();
@@ -546,6 +552,7 @@
             if (currentUser) {
                 loggedInUsers = loggedInUsers.filter(user => user !== currentUser);
                 currentUser = null;
+                localStorage.removeItem('currentUser'); // 로그아웃 시 삭제
             }
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('registerForm').style.display = 'none';
@@ -596,7 +603,6 @@
                 };
             }
 
-            // type별 객체가 올바른지 확인하고 초기화
             if (!userData[nickname][type] || typeof userData[nickname][type] !== 'object') {
                 userData[nickname][type] = { status: [], descriptions: [] };
             }
@@ -690,6 +696,7 @@
             );
             loggedInUsers = loggedInUsers.filter(user => user !== currentUser);
             currentUser = null;
+            localStorage.removeItem('currentUser'); // 탈퇴 시 삭제
             saveToFirebase();
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('registerForm').style.display = 'none';
