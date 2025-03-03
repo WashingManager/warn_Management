@@ -2,18 +2,16 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>세계정세 재난정보 관리시스템</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-    
 		body {
 			font-family: 'Roboto', sans-serif;
 			background-color: #f4f7fa;
 			margin: 0;
 			padding: 20px;
 			color: #333;
-			display: none;
 		}
 		h1 {
 			color: #2c3e50;
@@ -108,43 +106,34 @@
 		.dropdown:hover .dropdown-content {
 			display: block;
 		}
-		.dropdown-content button {
+		.dropdown-content button,
+		.dropdown-content .delete-btn {
 			display: block;
 			width: 100%;
 			text-align: left;
 			padding: 8px 12px;
 			margin: 0;
 			border: none;
-			background-color: transparent; /* 기본 배경 투명 */
-			color: #3a506b;
+			background-color: transparent;
+			color: #333;
 			font-size: 14px;
 			cursor: pointer;
 			transition: background-color 0.2s ease, color 0.2s ease;
 		}
-		.delete-btn {
-			display: block;
-			width: 100%;
-			text-align: left;
-			padding: 8px 12px;
-			margin: 0;
-			border: none;
-			background-color: transparent; /* 기본 배경 투명 */
-			color: #3a506b;
-			font-size: 14px;
-			cursor: pointer;
-			transition: background-color 0.2s ease, color 0.2s ease;
-		}
-		
 		.dropdown-content button:hover {
-			color: #b71c1c;
+			background-color: #f5f5f5;
+		}
+		.dropdown-content .delete-btn {
+			color: #d32f2f; /* 탈퇴 버튼 기본 색상 */
 		}
 		.dropdown-content .delete-btn:hover {
+			background-color: #ffebee;
 			color: #b71c1c;
 		}
 		.nickname-span {
 			cursor: pointer;
 			color: #2c3e50;
-			font-weight: 700;
+			font-weight: 500;
 			transition: color 0.2s ease;
 		}
 		.dropdown:hover .nickname-span {
@@ -234,9 +223,6 @@
 		.modal-content input {
 			margin: 10px 0;
 		}
-		#nicknameContainer {
-			margin-top: 10px; /* 인디케이터와 간격 */
-		}
 		#registerForm { display: none; }
 		.divider { 
 			border: 0;
@@ -259,19 +245,6 @@
 		}
 		.yellow-card { background-color: #ffeb3b; }
 		.red-card { background-color: #f44336; }
-		<!--Mobile Style-->
-		@media (max-width: 768px) {
-            .container { padding: 10px; margin: 10px; max-width: 100%; }
-            h1 { font-size: 20px; }
-            input[type="text"], input[type="password"] { width: 100%; margin: 5px 0; }
-            button { width: 100%; margin: 5px 0; }
-            table { font-size: 12px; }
-            th, td { padding: 8px; word-break: break-word; }
-            .tooltip { font-size: 12px; max-width: 90vw; }
-            .dropdown-content { min-width: 100px; }
-            .modal-content { width: 90%; padding: 15px; }
-            .card-container { flex-wrap: wrap; }
-        }
 	</style>
 </head>
 <body>
@@ -291,10 +264,9 @@
 					<button onclick="completeRegister()">가입</button>
 		</div>
 			<span id="onlineStatus"></span>
-			<div id="nicknameContainer" style="display: none;">
-				<input type="text" id="nickname" placeholder="닉네임 입력" autocomplete="off">
-			</div>
-			<hr>
+			<input type="text" id="nickname" placeholder="닉네임 입력" autocomplete="off">
+
+		<hr>
         <!-- <button id="cautionBtn" onclick="addEntry('caution')">주의</button> -->
         <!-- <button id="banBtn" onclick="addEntry('ban')">정지</button> -->
         <!-- <button id="warningBtn" onclick="addEntry('warning')">경고</button> -->
@@ -344,13 +316,409 @@
 			<button onclick="closeDeleteModal()">취소</button>
 		</div>
 	</div>
-	
-	<footer style="text-align: center; padding: 20px; color: #666; font-size: 14px;">
-    © 2025 Copyright 세계정세 재난정보 청소부장 All Rights Reserved.
-	</footer>
 	    <!-- Firebase 8.x CDN -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-	<script type="module" src="main.js"></script>
-    </body>
+    <script>
+        // Firebase 설정 (나중에 깃허브에서 사용 시 주석 해제)
+		const firebaseConfig = {
+			apiKey: "AIzaSyB0RfhCYOTARxVqH3ejYQH5dHJI5KEQZpc",
+			authDomain: "worldinfowarn.firebaseapp.com",
+			databaseURL: "https://worldinfowarn-default-rtdb.firebaseio.com",
+			projectId: "worldinfowarn",
+			storageBucket: "worldinfowarn.firebasestorage.app",
+			messagingSenderId: "334505201044",
+			appId: "1:334505201044:web:a01144c9cbc0f9ef271381",
+			measurementId: "G-78ZVZD2TG2"
+		  };
+		  firebase.initializeApp(firebaseConfig);
+		const db = firebase.database();
+
+
+        let currentUser = localStorage.getItem('currentUser') || null; // 새로고침 시 복원
+        let loggedInUsers = [];
+        let userData = {};
+        let userPasswords = {};
+        const INVITE_CODE = "WARM";
+        const ADMIN_CODE = "DELETE";
+
+        function saveToFirebase() {
+            console.log("Saving to Firebase:", { loggedInUsers, userData, userPasswords });
+            db.ref('users').set({
+                loggedInUsers: loggedInUsers,
+                userData: userData,
+                userPasswords: userPasswords
+            }).then(() => {
+                console.log("Data saved successfully");
+            }).catch(error => {
+                console.error("Firebase 저장 오류:", error);
+            });
+        }
+
+        function loadData() {
+            db.ref('users').on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                console.log("Loaded from Firebase:", data);
+                loggedInUsers = data.loggedInUsers || [];
+                userData = data.userData || {};
+                userPasswords = data.userPasswords || {};
+                // userData 구조 보장
+                Object.keys(userData).forEach(nickname => {
+                    ['caution', 'ban', 'warning', 'kick'].forEach(type => {
+                        if (!userData[nickname][type] || typeof userData[nickname][type] !== 'object') {
+                            userData[nickname][type] = { status: [], descriptions: [] };
+                        }
+                        if (!Array.isArray(userData[nickname][type].status)) {
+                            userData[nickname][type].status = [];
+                        }
+                        if (!Array.isArray(userData[nickname][type].descriptions)) {
+                            userData[nickname][type].descriptions = [];
+                        }
+                    });
+                });
+                renderTable();
+                // currentUser 복원 및 검증
+                if (currentUser && loggedInUsers.includes(currentUser) && userPasswords[currentUser]) {
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('registerForm').style.display = 'none';
+                    updateOnlineStatus();
+                } else {
+                    currentUser = null;
+                    localStorage.removeItem('currentUser');
+                    document.getElementById('loginForm').style.display = 'block';
+                    document.getElementById('registerForm').style.display = 'none';
+                    document.getElementById('onlineStatus').innerHTML = '';
+                }
+            }, (error) => {
+                console.error("Firebase 불러오기 오류:", error);
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            Object.keys(userData).forEach(nickname => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="nickname">${nickname}</td>
+                    <td class="caution status">${formatEntry(userData[nickname].caution)}</td>
+                    <td class="ban status">${formatEntry(userData[nickname].ban)}</td>
+                    <td class="warning status">${formatEntry(userData[nickname].warning)}</td>
+                    <td class="kick status">${formatEntry(userData[nickname].kick)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function formatEntry(entry) {
+            if (!entry || !entry.status) return '';
+
+            let cardHtml = '';
+            if (entry.status.length > 0) {
+                if (entry.type === 'kick') {
+                    cardHtml += `<span class="red-card"></span>`;
+                } else {
+                    cardHtml += `<span class="yellow-card"></span>`;
+                    if (entry.status.length >= 2) {
+                        cardHtml += `<span class="red-card"></span>`;
+                    }
+                }
+            }
+
+            let statusHtml = '';
+            if (entry.status.length > 0) {
+                statusHtml = entry.status.map((s, index) => {
+                    let typeKorean = '';
+                    switch (s.content) {
+                        case 'caution': typeKorean = '주의'; break;
+                        case 'ban': typeKorean = '정지'; break;
+                        case 'warning': typeKorean = '경고'; break;
+                        case 'kick': typeKorean = '퇴장'; break;
+                        default: typeKorean = s.content;
+                    }
+                    return `
+                        <div class="message">
+                            ${typeKorean} ${index + 1} - <span class="meta-info">${s.author} (${s.time})</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            let descHtml = '';
+            if (entry.descriptions && entry.descriptions.length > 0) {
+                descHtml = entry.descriptions.map(d => `
+                    <div class="message">
+                        ${d.content} - <span class="meta-info">${d.author} (${d.time})</span>
+                    </div>
+                `).join('');
+            }
+
+            return `
+                <div class="card-container">${cardHtml}</div>
+                <span class="tooltip">
+                    ${statusHtml}
+                    ${descHtml ? '<hr class="divider">' + descHtml : ''}
+                    <hr class="divider">
+                    <input type="text" class="edit-input" placeholder="설명" onblur="saveEdit('${entry.nickname}', '${entry.type}', this.value)">
+                    <button onclick="saveEdit('${entry.nickname}', '${entry.type}', document.querySelector('.edit-input').value)">추가</button>
+                </span>
+            `;
+        }
+
+        // 초기 상태 설정
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('registerForm').style.display = 'none';
+        loadData();
+
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') document.getElementById('loginBtn').click();
+        });
+        document.getElementById('nickname').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') document.getElementById('cautionBtn').click();
+        });
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (!username || !password) {
+                alert('작성자 이름과 비밀번호를 입력해주세요!');
+                return;
+            }
+            if (!userPasswords[username]) {
+                alert('등록된 사용자가 아닙니다. 회원가입을 진행해주세요.');
+                return;
+            }
+            if (userPasswords[username] !== password) {
+                alert('비밀번호가 틀렸습니다!');
+                return;
+            }
+            currentUser = username;
+            if (!loggedInUsers.includes(username)) loggedInUsers.push(username);
+            localStorage.setItem('currentUser', currentUser); // 로그인 시 저장
+            document.getElementById('loginForm').style.display = 'none';
+            saveToFirebase();
+            updateOnlineStatus();
+        }
+
+        function openRegisterModal() {
+            document.getElementById('registerModal').style.display = 'block';
+            document.getElementById('inviteCodeInput').value = '';
+        }
+
+        function closeRegisterModal() {
+            document.getElementById('registerModal').style.display = 'none';
+        }
+
+		// 해시 값으로 대체
+		const INVITE_CODE_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+		const ADMIN_CODE_HASH = "a1d0c6e83f027327d8461063f4ac58a6c0e7c8f5e7e5c8f9e7e5c8f9e7e5c8f9";
+
+		// 초대 코드 확인 함수 수정
+		function checkInviteCode() {
+			const inviteCode = document.getElementById('inviteCodeInput').value;
+			const hashedInput = CryptoJS.SHA256(inviteCode).toString(CryptoJS.enc.Hex); // 입력값을 해시로 변환
+			if (hashedInput === INVITE_CODE_HASH) {
+				alert('승인되었습니다');
+				closeRegisterModal();
+	            document.getElementById('loginForm').style.display = 'none';
+				document.getElementById('registerForm').style.display = 'block';
+				document.getElementById('regUsername').value = '';
+				document.getElementById('regPassword').value = '';
+				document.getElementById('regPasswordConfirm').value = '';
+			} else {
+				alert('초대코드가 올바르지 않습니다!');
+			}
+		}
+
+
+        function completeRegister() {
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+            if (!username || !password || !passwordConfirm) {
+                alert('이름과 비밀번호, 비밀번호 확인을 모두 입력해주세요!');
+                return;
+            }
+            if (password !== passwordConfirm) {
+                alert('비밀번호와 비밀번호 확인이 일치하지 않습니다!');
+                return;
+            }
+            if (userPasswords[username]) {
+                alert('이미 등록된 사용자입니다. 로그인해주세요.');
+                return;
+            }
+            userPasswords[username] = password;
+            saveToFirebase();
+            alert('회원가입이 완료되었습니다. 로그인해주세요.');
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function logout() {
+            if (currentUser) {
+                loggedInUsers = loggedInUsers.filter(user => user !== currentUser);
+                currentUser = null;
+                localStorage.removeItem('currentUser'); // 로그아웃 시 삭제
+            }
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('onlineStatus').innerHTML = '';
+            saveToFirebase();
+        }
+
+        function updateOnlineStatus() {
+            const status = document.getElementById('onlineStatus');
+            const userList = Object.keys(userPasswords).map(user => {
+                const isOnline = loggedInUsers.includes(user) ? '<span class="online-indicator"></span>' : '<span class="offline-indicator"></span>';
+                return `${user} ${isOnline}`;
+            }).join('<br>');
+            status.innerHTML = `
+                <span class="status">
+                    <div class="dropdown">
+                        <span class="nickname-span">${currentUser}</span>
+                        <div class="dropdown-content">
+                            <button onclick="logout()">로그아웃</button>
+                            <button onclick="openResetModal()">데이터 초기화</button>
+                            <span class="delete-btn" onclick="openDeleteModal()">탈퇴</span>
+                        </div>
+                    </div>
+                    접속중
+                </span>
+                <span class="online-indicator"></span>
+                <span class="tooltip">${userList}</span>
+            `;
+        }
+
+        function addEntry(type) {
+            if (!currentUser) {
+                alert('로그인 먼저 해주세요!');
+                return;
+            }
+            const nickname = document.getElementById('nickname').value;
+            if (!nickname) return;
+
+            const time = new Date().toLocaleString('ko-KR');
+            if (!userData[nickname]) {
+                userData[nickname] = { 
+                    caution: { status: [], descriptions: [] },
+                    ban: { status: [], descriptions: [] },
+                    warning: { status: [], descriptions: [] },
+                    kick: { status: [], descriptions: [] }
+                };
+            }
+
+            if (!userData[nickname][type] || typeof userData[nickname][type] !== 'object') {
+                userData[nickname][type] = { status: [], descriptions: [] };
+            }
+            if (!Array.isArray(userData[nickname][type].status)) {
+                userData[nickname][type].status = [];
+            }
+
+            if (!userData[nickname][type].status.length) {
+                userData[nickname][type].time = time;
+                userData[nickname][type].author = currentUser;
+                userData[nickname][type].nickname = nickname;
+                userData[nickname][type].type = type;
+            }
+
+            const status = userData[nickname][type].status;
+            status.push({ content: type, author: currentUser, time });
+
+            if (type === 'caution' && status.length >= 2) {
+                userData[nickname].caution.status = status.slice(0, 2);
+                userData[nickname].ban = { status: [{ content: 'ban', author: currentUser, time }], descriptions: [], time, author: currentUser, nickname, type: 'ban' };
+            } else if (type === 'ban' && status.length >= 2) {
+                userData[nickname].ban.status = status.slice(0, 2);
+                userData[nickname].warning = { status: [{ content: 'warning', author: currentUser, time }], descriptions: [], time, author: currentUser, nickname, type: 'warning' };
+            } else if (type === 'warning' && status.length >= 2) {
+                userData[nickname].warning.status = status.slice(0, 2);
+                userData[nickname].kick = { status: [{ content: 'kick', author: currentUser, time }], descriptions: [], time, author: currentUser, nickname, type: 'kick' };
+            } else if (type === 'kick') {
+                userData[nickname].kick.status = status.slice(0, 1);
+            }
+
+            saveToFirebase();
+            renderTable();
+            document.getElementById('nickname').value = '';
+        }
+
+        function saveEdit(nickname, type, value) {
+            if (!currentUser || !value) return;
+            const time = new Date().toLocaleString('ko-KR');
+            if (!userData[nickname][type].descriptions) {
+                userData[nickname][type].descriptions = [];
+            }
+            userData[nickname][type].descriptions.push({ content: value, author: currentUser, time });
+            saveToFirebase();
+            renderTable();
+        }
+
+        function openResetModal() {
+            document.getElementById('resetModal').style.display = 'block';
+            document.getElementById('adminCodeInput').value = '';
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').style.display = 'none';
+        }
+
+        // 관리자 코드 확인 함수 수정 (데이터 초기화)
+		function resetData() {
+			const adminCode = document.getElementById('adminCodeInput').value;
+			const hashedInput = CryptoJS.SHA256(adminCode).toString(CryptoJS.enc.Hex); // 입력값을 해시로 변환
+			if (hashedInput === ADMIN_CODE_HASH) {
+				userData = {};
+				saveToFirebase();
+				renderTable();
+				closeResetModal();
+				alert('닉네임 데이터가 초기화되었습니다.');
+			} else {
+				alert('관리자 코드가 올바르지 않습니다!');
+			}
+		}
+
+        function openDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'block';
+            document.getElementById('deleteCodeInput').value = '';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        // 탈퇴 함수 수정
+		function deleteUser() {
+			const deleteCode = document.getElementById('deleteCodeInput').value;
+			const hashedInput = CryptoJS.SHA256(deleteCode).toString(CryptoJS.enc.Hex); // 입력값을 해시로 변환
+			if (hashedInput === ADMIN_CODE_HASH) {
+				if (!currentUser) {
+					alert('탈퇴할 사용자가 없습니다!');
+					return;
+				}
+				delete userPasswords[currentUser];
+				userData = Object.fromEntries(
+					Object.entries(userData).filter(([nickname]) => nickname !== currentUser)
+				);
+				loggedInUsers = loggedInUsers.filter(user => user !== currentUser);
+				currentUser = null;
+				localStorage.removeItem('currentUser');
+				saveToFirebase();
+				document.getElementById('loginForm').style.display = 'block';
+				document.getElementById('registerForm').style.display = 'none';
+				document.getElementById('username').value = '';
+				document.getElementById('password').value = '';
+				document.getElementById('onlineStatus').innerHTML = '';
+				renderTable();
+				closeDeleteModal();
+				alert('탈퇴가 완료되었습니다.');
+			} else {
+				alert('관리자 코드가 올바르지 않습니다!');
+			}
+		}
+    </script>
+</body>
 </html>
