@@ -332,8 +332,8 @@
 		const db = firebase.database();
 
 
-        // 변수 초기화
-        let currentUser = null;
+       // 변수 초기화
+        let currentUser = localStorage.getItem('currentUser') || null; // 새로고침 시 복원
         let loggedInUsers = [];
         let userData = {};
         let userPasswords = {};
@@ -346,6 +346,8 @@
                 loggedInUsers: loggedInUsers,
                 userData: userData,
                 userPasswords: userPasswords
+            }).catch(error => {
+                console.error("Firebase 저장 오류:", error); // 오류 확인용
             });
         }
 
@@ -357,7 +359,9 @@
                 userData = data.userData || {};
                 userPasswords = data.userPasswords || {};
                 renderTable();
-                if (currentUser) updateOnlineStatus();
+                if (currentUser) updateOnlineStatus(); // currentUser가 있을 때만 업데이트
+            }, (error) => {
+                console.error("Firebase 불러오기 오류:", error); // 오류 확인용
             });
         }
 
@@ -434,8 +438,15 @@
         }
 
         // 초기 상태 설정
-        document.getElementById('loginForm').style.display = 'block';
-        document.getElementById('registerForm').style.display = 'none';
+        if (currentUser && userPasswords[currentUser]) {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            updateOnlineStatus();
+        } else {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            localStorage.removeItem('currentUser'); // 유효하지 않은 경우 삭제
+        }
         loadData();
 
         document.getElementById('password').addEventListener('keypress', function(e) {
@@ -461,9 +472,10 @@
                 return;
             }
             currentUser = username;
-            loggedInUsers = [username];
+            if (!loggedInUsers.includes(username)) loggedInUsers.push(username); // 중복 추가 방지
+            localStorage.setItem('currentUser', currentUser); // 로컬에 저장
             document.getElementById('loginForm').style.display = 'none';
-            saveToFirebase(); // Firebase에 저장
+            saveToFirebase();
             updateOnlineStatus();
         }
 
@@ -508,7 +520,7 @@
                 return;
             }
             userPasswords[username] = password;
-            saveToFirebase(); // Firebase에 저장
+            saveToFirebase();
             alert('회원가입이 완료되었습니다. 로그인해주세요.');
             document.getElementById('registerForm').style.display = 'none';
             document.getElementById('loginForm').style.display = 'block';
@@ -517,20 +529,23 @@
         }
 
         function logout() {
+            if (currentUser) {
+                loggedInUsers = loggedInUsers.filter(user => user !== currentUser);
+            }
             currentUser = null;
-            loggedInUsers = [];
+            localStorage.removeItem('currentUser');
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('registerForm').style.display = 'none';
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
             document.getElementById('onlineStatus').innerHTML = '';
-            saveToFirebase(); // Firebase에 저장
+            saveToFirebase();
         }
 
         function updateOnlineStatus() {
             const status = document.getElementById('onlineStatus');
             const userList = Object.keys(userPasswords).map(user => {
-                const isOnline = currentUser === user ? '<span class="online-indicator"></span>' : '<span class="offline-indicator"></span>';
+                const isOnline = loggedInUsers.includes(user) ? '<span class="online-indicator"></span>' : '<span class="offline-indicator"></span>';
                 return `${user} ${isOnline}`;
             }).join('<br>');
             status.innerHTML = `
@@ -604,7 +619,7 @@
                 userData[nickname].kick.status = status.slice(0, 1);
             }
 
-            saveToFirebase(); // Firebase에 저장
+            saveToFirebase();
             renderTable();
             document.getElementById('nickname').value = '';
         }
@@ -616,7 +631,7 @@
                 userData[nickname][type].descriptions = [];
             }
             userData[nickname][type].descriptions.push({ content: value, author: currentUser, time });
-            saveToFirebase(); // Firebase에 저장
+            saveToFirebase();
             renderTable();
         }
 
@@ -636,7 +651,7 @@
                 return;
             }
             userData = {};
-            saveToFirebase(); // Firebase에 저장
+            saveToFirebase();
             renderTable();
             closeResetModal();
             alert('닉네임 데이터가 초기화되었습니다.');
@@ -661,13 +676,14 @@
                 alert('탈퇴할 사용자가 없습니다!');
                 return;
             }
-            delete userPasswords[currentUser]; // 가입자 데이터 삭제
+            delete userPasswords[currentUser];
             userData = Object.fromEntries(
                 Object.entries(userData).filter(([nickname]) => nickname !== currentUser)
-            ); // 닉네임 데이터에서 탈퇴자 제거
+            );
+            loggedInUsers = loggedInUsers.filter(user => user !== currentUser);
             currentUser = null;
-            loggedInUsers = [];
-            saveToFirebase(); // Firebase에 저장
+            localStorage.removeItem('currentUser');
+            saveToFirebase();
             document.getElementById('loginForm').style.display = 'block';
             document.getElementById('registerForm').style.display = 'none';
             document.getElementById('username').value = '';
