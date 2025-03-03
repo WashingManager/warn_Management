@@ -334,15 +334,13 @@
 		const db = firebase.database();
 
 
-        // 변수 초기화 (로컬 스토리지 제거)
-        let currentUser = null; // 클라이언트별로 독립적, Firebase에 저장하지 않음
+        let currentUser = null;
         let loggedInUsers = [];
         let userData = {};
         let userPasswords = {};
         const INVITE_CODE = "WARM";
         const ADMIN_CODE = "DELETE";
 
-        // Firebase에서 데이터 저장
         function saveToFirebase() {
             console.log("Saving to Firebase:", { loggedInUsers, userData, userPasswords });
             db.ref('users').set({
@@ -356,7 +354,6 @@
             });
         }
 
-        // Firebase에서 데이터 불러오기 및 실시간 동기화
         function loadData() {
             db.ref('users').on('value', (snapshot) => {
                 const data = snapshot.val() || {};
@@ -364,8 +361,21 @@
                 loggedInUsers = data.loggedInUsers || [];
                 userData = data.userData || {};
                 userPasswords = data.userPasswords || {};
+                // userData 구조 보장
+                Object.keys(userData).forEach(nickname => {
+                    ['caution', 'ban', 'warning', 'kick'].forEach(type => {
+                        if (!userData[nickname][type] || typeof userData[nickname][type] !== 'object') {
+                            userData[nickname][type] = { status: [], descriptions: [] };
+                        }
+                        if (!Array.isArray(userData[nickname][type].status)) {
+                            userData[nickname][type].status = [];
+                        }
+                        if (!Array.isArray(userData[nickname][type].descriptions)) {
+                            userData[nickname][type].descriptions = [];
+                        }
+                    });
+                });
                 renderTable();
-                // currentUser가 loggedInUsers에 없으면 로그인 화면 표시
                 if (currentUser && !loggedInUsers.includes(currentUser)) {
                     currentUser = null;
                     document.getElementById('loginForm').style.display = 'block';
@@ -379,7 +389,6 @@
             });
         }
 
-        // 테이블 렌더링
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -451,7 +460,6 @@
             `;
         }
 
-        // 초기 상태 설정
         document.getElementById('loginForm').style.display = 'block';
         document.getElementById('registerForm').style.display = 'none';
         loadData();
@@ -588,6 +596,14 @@
                 };
             }
 
+            // type별 객체가 올바른지 확인하고 초기화
+            if (!userData[nickname][type] || typeof userData[nickname][type] !== 'object') {
+                userData[nickname][type] = { status: [], descriptions: [] };
+            }
+            if (!Array.isArray(userData[nickname][type].status)) {
+                userData[nickname][type].status = [];
+            }
+
             if (!userData[nickname][type].status.length) {
                 userData[nickname][type].time = time;
                 userData[nickname][type].author = currentUser;
@@ -600,25 +616,13 @@
 
             if (type === 'caution' && status.length >= 2) {
                 userData[nickname].caution.status = status.slice(0, 2);
-                userData[nickname].ban.status = [{ content: 'ban', author: currentUser, time }];
-                userData[nickname].ban.time = time;
-                userData[nickname].ban.author = currentUser;
-                userData[nickname].ban.nickname = nickname;
-                userData[nickname].ban.type = 'ban';
+                userData[nickname].ban = { status: [{ content: 'ban', author: currentUser, time }], descriptions: [], time, author: currentUser, nickname, type: 'ban' };
             } else if (type === 'ban' && status.length >= 2) {
                 userData[nickname].ban.status = status.slice(0, 2);
-                userData[nickname].warning.status = [{ content: 'warning', author: currentUser, time }];
-                userData[nickname].warning.time = time;
-                userData[nickname].warning.author = currentUser;
-                userData[nickname].warning.nickname = nickname;
-                userData[nickname].warning.type = 'warning';
+                userData[nickname].warning = { status: [{ content: 'warning', author: currentUser, time }], descriptions: [], time, author: currentUser, nickname, type: 'warning' };
             } else if (type === 'warning' && status.length >= 2) {
                 userData[nickname].warning.status = status.slice(0, 2);
-                userData[nickname].kick.status = [{ content: 'kick', author: currentUser, time }];
-                userData[nickname].kick.time = time;
-                userData[nickname].kick.author = currentUser;
-                userData[nickname].kick.nickname = nickname;
-                userData[nickname].kick.type = 'kick';
+                userData[nickname].kick = { status: [{ content: 'kick', author: currentUser, time }], descriptions: [], time, author: currentUser, nickname, type: 'kick' };
             } else if (type === 'kick') {
                 userData[nickname].kick.status = status.slice(0, 1);
             }
