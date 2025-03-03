@@ -671,6 +671,9 @@
 		function resetData() {
 			const adminCode = document.getElementById('adminCodeInput').value;
 			const hashedInput = CryptoJS.SHA256(adminCode).toString(CryptoJS.enc.Hex); // 입력값을 해시로 변환
+			console.log('입력값:', adminCode);
+			console.log('해시값:', hashedInput);
+			console.log('저장된 해시값:', ADMIN_CODE_HASH);
 			if (hashedInput === ADMIN_CODE_HASH) {
 				userData = {};
 				saveToFirebase();
