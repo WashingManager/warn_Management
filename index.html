@@ -291,7 +291,7 @@
 	<div id="registerModal" class="modal">
 		<div class="modal-content">
 			<h2>초대코드 입력</h2>
-			<input type="text" id="inviteCodeInput" placeholder="초대코드를 입력하세요" autocomplete="off">
+			<input type="text" id="inviteCodeInput" placeholder="초대코드를 입력하세요" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
 			<button onclick="checkInviteCode()">확인</button>
 			<button onclick="closeRegisterModal()">취소</button>
 		</div>
@@ -301,7 +301,7 @@
 	<div id="resetModal" class="modal">
 		<div class="modal-content">
 			<h2>관리자 코드 입력</h2>
-			<input type="text" id="adminCodeInput" placeholder="관리자 코드를 입력하세요" autocomplete="off">
+			<input type="text" id="adminCodeInput" placeholder="관리자 코드를 입력하세요" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
 			<button onclick="resetData()">초기화</button>
 			<button onclick="closeResetModal()">취소</button>
 		</div>
@@ -311,7 +311,7 @@
 	<div id="deleteModal" class="modal">
 		<div class="modal-content">
 			<h2>관리자 승인 코드 입력</h2>
-			<input type="text" id="deleteCodeInput" placeholder="관리자 코드를 입력하세요" autocomplete="off">
+			<input type="text" id="deleteCodeInput" placeholder="관리자 코드를 입력하세요" autocomplete="off" oninput="this.value = this.value.toUpperCase()">
 			<button onclick="deleteUser()">탈퇴</button>
 			<button onclick="closeDeleteModal()">취소</button>
 		</div>
@@ -513,22 +513,22 @@
 
 		// 초대 코드 확인 함수 수정
 		function checkInviteCode() {
-		    const inviteCode = "WARM"
-		    const hashedInput = CryptoJS.SHA256(inviteCode).toString(CryptoJS.enc.Hex);
-		    console.log('입력값:', inviteCode);
-		    console.log('해시값:', hashedInput);
-		    console.log('저장된 해시값:', INVITE_CODE_HASH);
-		    if (hashedInput === INVITE_CODE_HASH) {
-		        alert('승인되었습니다');
-		        closeRegisterModal();
-		        document.getElementById('loginForm').style.display = 'none';
-		        document.getElementById('registerForm').style.display = 'block';
-		        document.getElementById('regUsername').value = '';
-		        document.getElementById('regPassword').value = '';
-		        document.getElementById('regPasswordConfirm').value = '';
-		    } else {
-		        alert('초대코드가 올바르지 않습니다!');
-		    }
+			const inviteCode = document.getElementById('inviteCodeInput').value.toUpperCase(); // 입력값 사용
+			const hashedInput = CryptoJS.SHA256(inviteCode).toString(CryptoJS.enc.Hex);
+			console.log('입력값:', inviteCode);
+			console.log('해시값:', hashedInput);
+			console.log('저장된 해시값:', INVITE_CODE_HASH);
+			if (hashedInput === INVITE_CODE_HASH) {
+				alert('승인되었습니다');
+				closeRegisterModal();
+				document.getElementById('loginForm').style.display = 'none';
+				document.getElementById('registerForm').style.display = 'block';
+				document.getElementById('regUsername').value = '';
+				document.getElementById('regPassword').value = '';
+				document.getElementById('regPasswordConfirm').value = '';
+			} else {
+				alert('초대코드가 올바르지 않습니다!');
+			}
 		}
 
 
