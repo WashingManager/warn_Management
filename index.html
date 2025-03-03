@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>세계정세 재난정보 관리시스템</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
 		body {
 			font-family: 'Roboto', sans-serif;
@@ -515,7 +515,7 @@
 
 		// 초대 코드 확인 함수 수정
 		function checkInviteCode() {
-		    const inviteCode = document.getElementById('inviteCodeInput').value;
+		    const inviteCode = document.getElementById('inviteCodeInput').value.trim(); // 공백 제거
 		    const hashedInput = CryptoJS.SHA256(inviteCode).toString(CryptoJS.enc.Hex);
 		    console.log('입력값:', inviteCode);
 		    console.log('해시값:', hashedInput);
