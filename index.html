@@ -251,19 +251,20 @@
         <h1>세계정세 재난정보 관리시스템</h1>
 		        
         <div id="loginForm">
-            <input type="text" id="username" placeholder="작성자 이름">
-            <input type="password" id="password" placeholder="비밀번호">
-            <button id="loginBtn" onclick="login()">로그인</button>
-            <button id="registerBtn" onclick="openRegisterModal()">회원가입</button>
-        </div>
-        <div id="registerForm">
-            <input type="text" id="regUsername" placeholder="작성자 이름">
-            <input type="password" id="regPassword" placeholder="비밀번호">
-            <input type="password" id="regPasswordConfirm" placeholder="비밀번호 확인">
-            <button onclick="completeRegister()">가입</button>
-        </div>
-        <span id="onlineStatus"></span>
-        <input type="text" id="nickname" placeholder="닉네임 입력">
+			<input type="text" id="username" placeholder="작성자 이름" autocomplete="username">
+			<input type="password" id="password" placeholder="비밀번호" autocomplete="current-password">
+			<button id="loginBtn" onclick="login()">로그인</button>
+			<button id="registerBtn" onclick="openRegisterModal()">회원가입</button>
+				</div>
+				<div id="registerForm">
+					<input type="text" id="regUsername" placeholder="작성자 이름" autocomplete="username">
+					<input type="password" id="regPassword" placeholder="비밀번호" autocomplete="new-password">
+					<input type="password" id="regPasswordConfirm" placeholder="비밀번호 확인" autocomplete="new-password">
+					<button onclick="completeRegister()">가입</button>
+		</div>
+			<span id="onlineStatus"></span>
+			<input type="text" id="nickname" placeholder="닉네임 입력" autocomplete="off">
+
 		<hr>
         <!-- <button id="cautionBtn" onclick="addEntry('caution')">주의</button> -->
         <!-- <button id="banBtn" onclick="addEntry('ban')">정지</button> -->
@@ -286,29 +287,30 @@
     </div>
 
     <!-- 초대코드 입력 모달 -->
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <h2>초대코드 입력</h2>
-            <input type="text" id="inviteCodeInput" placeholder="초대코드를 입력하세요">
-            <button onclick="checkInviteCode()">확인</button>
-            <button onclick="closeRegisterModal()">취소</button>
-        </div>
-    </div>
+	<div id="registerModal" class="modal">
+		<div class="modal-content">
+			<h2>초대코드 입력</h2>
+			<input type="text" id="inviteCodeInput" placeholder="초대코드를 입력하세요" autocomplete="off">
+			<button onclick="checkInviteCode()">확인</button>
+			<button onclick="closeRegisterModal()">취소</button>
+		</div>
+	</div>
 
-    <!-- 데이터 초기화 모달 -->
-    <div id="resetModal" class="modal">
-        <div class="modal-content">
-            <h2>관리자 코드 입력</h2>
-            <input type="text" id="adminCodeInput" placeholder="관리자 코드를 입력하세요">
-            <button onclick="resetData()">초기화</button>
-            <button onclick="closeResetModal()">취소</button>
-        </div>
-    </div>
-	<!-- 데이터 초기화 모달 아래에 추가 -->
+	<!-- 데이터 초기화 모달 -->
+	<div id="resetModal" class="modal">
+		<div class="modal-content">
+			<h2>관리자 코드 입력</h2>
+			<input type="text" id="adminCodeInput" placeholder="관리자 코드를 입력하세요" autocomplete="off">
+			<button onclick="resetData()">초기화</button>
+			<button onclick="closeResetModal()">취소</button>
+		</div>
+	</div>
+
+	<!-- 탈퇴 모달 -->
 	<div id="deleteModal" class="modal">
 		<div class="modal-content">
 			<h2>관리자 승인 코드 입력</h2>
-			<input type="text" id="deleteCodeInput" placeholder="관리자 코드를 입력하세요">
+			<input type="text" id="deleteCodeInput" placeholder="관리자 코드를 입력하세요" autocomplete="off">
 			<button onclick="deleteUser()">탈퇴</button>
 			<button onclick="closeDeleteModal()">취소</button>
 		</div>
@@ -332,8 +334,8 @@
 		const db = firebase.database();
 
 
-       // 변수 초기화
-        let currentUser = localStorage.getItem('currentUser') || null; // 새로고침 시 복원
+        // 변수 초기화
+        let currentUser = localStorage.getItem('currentUser') || null;
         let loggedInUsers = [];
         let userData = {};
         let userPasswords = {};
@@ -342,12 +344,15 @@
 
         // Firebase에서 데이터 저장
         function saveToFirebase() {
+            console.log("Saving to Firebase:", { loggedInUsers, userData, userPasswords }); // 저장 데이터 확인
             db.ref('users').set({
                 loggedInUsers: loggedInUsers,
                 userData: userData,
                 userPasswords: userPasswords
+            }).then(() => {
+                console.log("Data saved successfully");
             }).catch(error => {
-                console.error("Firebase 저장 오류:", error); // 오류 확인용
+                console.error("Firebase 저장 오류:", error);
             });
         }
 
@@ -355,13 +360,22 @@
         function loadData() {
             db.ref('users').on('value', (snapshot) => {
                 const data = snapshot.val() || {};
+                console.log("Loaded from Firebase:", data); // 로드 데이터 확인
                 loggedInUsers = data.loggedInUsers || [];
                 userData = data.userData || {};
                 userPasswords = data.userPasswords || {};
                 renderTable();
-                if (currentUser) updateOnlineStatus(); // currentUser가 있을 때만 업데이트
+                if (currentUser && userPasswords[currentUser]) {
+                    updateOnlineStatus();
+                } else {
+                    currentUser = null;
+                    localStorage.removeItem('currentUser');
+                    document.getElementById('loginForm').style.display = 'block';
+                    document.getElementById('registerForm').style.display = 'none';
+                    document.getElementById('onlineStatus').innerHTML = '';
+                }
             }, (error) => {
-                console.error("Firebase 불러오기 오류:", error); // 오류 확인용
+                console.error("Firebase 불러오기 오류:", error);
             });
         }
 
@@ -438,16 +452,9 @@
         }
 
         // 초기 상태 설정
-        if (currentUser && userPasswords[currentUser]) {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'none';
-            updateOnlineStatus();
-        } else {
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('registerForm').style.display = 'none';
-            localStorage.removeItem('currentUser'); // 유효하지 않은 경우 삭제
-        }
-        loadData();
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('registerForm').style.display = 'none';
+        loadData(); // 데이터를 로드하면서 상태 설정
 
         document.getElementById('password').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') document.getElementById('loginBtn').click();
@@ -472,8 +479,8 @@
                 return;
             }
             currentUser = username;
-            if (!loggedInUsers.includes(username)) loggedInUsers.push(username); // 중복 추가 방지
-            localStorage.setItem('currentUser', currentUser); // 로컬에 저장
+            if (!loggedInUsers.includes(username)) loggedInUsers.push(username);
+            localStorage.setItem('currentUser', currentUser);
             document.getElementById('loginForm').style.display = 'none';
             saveToFirebase();
             updateOnlineStatus();
@@ -593,7 +600,6 @@
             const status = userData[nickname][type].status;
             status.push({ content: type, author: currentUser, time });
 
-            // 횟수 체크 및 전환
             if (type === 'caution' && status.length >= 2) {
                 userData[nickname].caution.status = status.slice(0, 2);
                 userData[nickname].ban.status = [{ content: 'ban', author: currentUser, time }];
