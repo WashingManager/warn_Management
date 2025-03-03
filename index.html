@@ -328,6 +328,8 @@
 			appId: "1:334505201044:web:a01144c9cbc0f9ef271381",
 			measurementId: "G-78ZVZD2TG2"
 		  };
+		  firebase.initializeApp(firebaseConfig);
+		const db = firebase.database();
 
 
         // 로컬 데이터 초기화
@@ -338,11 +340,38 @@
         const INVITE_CODE = "WARM";
         const ADMIN_CODE = "DELETE";
 
-        // 데이터 로드
-        function loadData() {
-            renderTable();
-            if (currentUser) updateOnlineStatus();
-        }
+        // 데이터 저장
+		function saveToFirebase() {
+			db.ref('users').set({
+				currentUser: currentUser,
+				loggedInUsers: loggedInUsers,
+				userData: userData,
+				userPasswords: userPasswords
+			});
+		}
+
+		// 데이터 불러오기
+		function loadData() {
+			db.ref('users').once('value', (snapshot) => {
+				const data = snapshot.val() || {};
+				currentUser = data.currentUser || null;
+				loggedInUsers = data.loggedInUsers || [];
+				userData = data.userData || {};
+				userPasswords = data.userPasswords || {};
+				renderTable();
+				if (currentUser) updateOnlineStatus();
+			});
+		}
+		//실시간 동기화
+		db.ref('users').on('value', (snapshot) => {
+			const data = snapshot.val() || {};
+			currentUser = data.currentUser || null;
+			loggedInUsers = data.loggedInUsers || [];
+			userData = data.userData || {};
+			userPasswords = data.userPasswords || {};
+			renderTable();
+			if (currentUser) updateOnlineStatus();
+		});
 
         function saveToLocalStorage() {
             localStorage.setItem('currentUser', currentUser);
