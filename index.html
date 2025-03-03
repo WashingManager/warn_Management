@@ -515,7 +515,7 @@
 
 		// 초대 코드 확인 함수 수정
 		function checkInviteCode() {
-		    const inviteCode = document.getElementById('inviteCodeInput').value.trim(); // 공백 제거
+		    const inviteCode = document.getElementById('inviteCodeInput').value; // 원래 값 그대로
 		    const hashedInput = CryptoJS.SHA256(inviteCode).toString(CryptoJS.enc.Hex);
 		    console.log('입력값:', inviteCode);
 		    console.log('해시값:', hashedInput);
